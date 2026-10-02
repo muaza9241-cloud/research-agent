@@ -16,70 +16,33 @@ from tools.search_tool import web_search_tool
 from tools.wikipedia_tool import wikipedia_tool
 
 REACT_PROMPT = PromptTemplate.from_template(
-    """You are a careful research agent. You decide dynamically whether to
-search the web or calculate numbers. Prefer live search for prices, places,
-schedules, and current facts. Use the calculator for totals, remaining budget,
-per-day splits, and other arithmetic. Always cite source URLs from search
-results in the Final Answer.
-
-You have access to these tools:
+    """Answer the following questions as best you can. You have access to the following tools:
 
 {tools}
 
-Use this exact format:
+Use the following format:
 
 Question: the input question you must answer
 Thought: you should always think about what to do
-Action: the action to take, must be one of [{tool_names}]
+Action: the action to take, should be one of [{tool_names}]
 Action Input: the input to the action
 Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat)
-Thought: I now know the final answer
-Final Answer: the complete answer, including sources (URLs) when search was used
+... (this Thought/Action/Action Input/Observation can repeat NYeh `OpenAIAuthenticationError` tabhi aata hai jab Python code OpenAI ke direct endpoint (`api.openai.com`) par request bhej raha ho, OpenRouter ke URL par nahi.
 
-Begin!
+Aapke `research_agent.py` file me **`_gemini_chat_model`** function abhi bhi puraani configuration use kar raha hai (`base_url` ke naam se, jo LangChain ignore kar raha hai).
 
-Question: {input}
-Thought:{agent_scratchpad}"""
-)
+Isay completely fix karne ke liye:
 
+1. GitHub par **[`agents/research_agent.py`](https://github.com/muaza9241-cloud/research-agent/edit/main/agents/research_agent.py)** edit link par jayein.
+
+2. Lines 46-53 wale function ko is exact code se replace kar dein:
+
+```python
 def _gemini_chat_model(api_key: str) -> BaseChatModel:
     return ChatOpenAI(
         model_name="google/gemini-2.5-flash",
         openai_api_key=api_key,
-        openai_api_base="https://openrouter.ai/api/v1",
+        openai_api_base="[https://openrouter.ai/api/v1](https://openrouter.ai/api/v1)",
         max_tokens=2000,
         temperature=0
     )
-
-def _load_llm() -> BaseChatModel:
-    openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
-    if not openrouter_key:
-        raise RuntimeError("OPENROUTER_API_KEY missing in .env file")
-
-    return ChatOpenAI(
-        model_name="meta-llama/llama-3.3-70b-instruct:free",
-        openai_api_key=openrouter_key,
-        openai_api_base="https://openrouter.ai/api/v1",
-        temperature=0.2,
-    )
-
-
-def build_research_agent(
-    llm: BaseChatModel | None = None,
-    tools: list[BaseTool] | None = None,
-) -> AgentExecutor:
-    model = llm or _load_llm()
-    agent_tools = tools or [web_search_tool, calculator_tool, wikipedia_tool]
-
-    agent = create_react_agent(model, agent_tools, REACT_PROMPT)
-    return AgentExecutor(
-        agent=agent,
-        tools=agent_tools,
-        verbose=True,
-        handle_parsing_errors=True,
-        return_intermediate_steps=True,
-    )
-def run_query(query: str, agent: AgentExecutor) -> str:
-    response = agent.invoke({"input": query})
-    return response["output"]
