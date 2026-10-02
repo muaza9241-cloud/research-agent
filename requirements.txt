@@ -7,3 +7,4 @@ langchain-google-genai>=2.0.0
 ddgs>=9.0.0
 google-api-python-client>=2.150.0
 python-dotenv>=1.0.0
+wikipedia
