@@ -45,9 +45,9 @@ Thought:{agent_scratchpad}"""
 
 def _gemini_chat_model(api_key: str) -> BaseChatModel:
     return ChatOpenAI(
-        model="google/gemini-2.5-flash",
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        base_url="https://openrouter.ai/api/v1",
+        model_name="google/gemini-2.5-flash",
+        openai_api_key=api_key,
+        openai_api_base="https://openrouter.ai/api/v1",
         max_tokens=2000,
         temperature=0
     )
