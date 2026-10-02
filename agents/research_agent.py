@@ -53,10 +53,16 @@ def _gemini_chat_model(api_key: str) -> BaseChatModel:
     )
 
 def _load_llm() -> BaseChatModel:
-    openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    if openrouter_key:
-        return _gemini_chat_model(openrouter_key)
-    raise RuntimeError("OPENROUTER_API_KEY missing in .env file")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not openrouter_key:
+        raise RuntimeError("OPENROUTER_API_KEY missing in .env file")
+
+    return ChatOpenAI(
+        model_name="meta-llama/llama-3.3-70b-instruct:free",
+        openai_api_key=openrouter_key,
+        openai_api_base="https://openrouter.ai/api/v1",
+        temperature=0.2,
+    )
 
 
 def build_research_agent(
